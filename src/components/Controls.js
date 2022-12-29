@@ -1,7 +1,9 @@
 import React from 'react'
 import { NextIcon } from '../Svg'
+import "../styles/controls.css"
 
 const Controls = ({stepsMonitor,stepsDone}) => {
+  
   return (
     <div className="next__prev">
         <div onClick={()=>stepsMonitor.changeStep("prev")} id="prev" className={`steps__controle ${stepsMonitor.currStep===1 && "disabled"}`}>

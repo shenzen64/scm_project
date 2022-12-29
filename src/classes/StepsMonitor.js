@@ -9,32 +9,6 @@ const lerp =(value1, value2, amount)=> {
     return value1 + (value2 - value1) * amount;
 }
 
-const distance = (lat1, lat2, lon1, lon2)=>{
-
-    // The math module contains a function
-    // named toRadians which converts from
-    // degrees to radians.
-    lon1 =  lon1 * Math.PI / 180;
-    lon2 = lon2 * Math.PI / 180;
-    lat1 = lat1 * Math.PI / 180;
-    lat2 = lat2 * Math.PI / 180;
-
-    // Haversine formula
-    let dlon = lon2 - lon1;
-    let dlat = lat2 - lat1;
-    let a = Math.pow(Math.sin(dlat / 2), 2)
-    + Math.cos(lat1) * Math.cos(lat2)
-    * Math.pow(Math.sin(dlon / 2),2);
-
-    let c = 2 * Math.asin(Math.sqrt(a));
-
-    // Radius of earth in kilometers. Use 3956
-    // for miles
-    let r = 6371;
-
-    // calculate the result
-    return(c * r);
-}
 
 export default class StepsMonitor {
     constructor(setCurrStep,sketch,map,notif,clickedPos,setWaiter,setStepsDone) {
@@ -60,10 +34,7 @@ export default class StepsMonitor {
             this.setStartPos()
         },4000)
 
-        window.addEventListener('dblclick',()=>{
-            const graph = this.Djikstra()
-            console.log(graph);
-        })
+       
         // this.setStartPos()
        
     }   
@@ -118,7 +89,10 @@ export default class StepsMonitor {
 
         this.drawLine(startCoords,endCoords,start+end)
         // We have one connection so this step 3 can be done
-        this.stepsDone = [1,1,1,0,0]
+        if(this.stepsDone[2]===0){
+            this.stepsDone = [1,1,1,0,0]
+            this.setStepsDone(this.stepsDone)
+        }
      
     }
 
@@ -257,43 +231,7 @@ export default class StepsMonitor {
         this.sketch.tb.world.add(cube)
     }
     
-    // SHORTEST PATH ALGORITHMS
-
-    Djikstra(){
-        // We start by Creating a graph object
-        // Each key represents a node on the graph. 
-        // Each value object contains key-value pairs that represent the node’s immediate neighbors and the distance of the path between node & neighbor
-        /* let graph = {
-            start: { A: 5, B: 2 },
-            A: { start: 1, C: 4, D: 2 },
-            B: { A: 8, D: 7 },
-            C: { D: 6, finish: 3 },
-            D: { finish: 1 },
-            finish: {},
-        }; */
-
-        const graph = {}
-        // We fill the graph object keys by destinations
-        this.destinations.forEach(dest=>{
-            graph[dest.name]={}
-            // Now we have to find connected nodes to "dest"
-            // We search on it in connections array
-            const connectedNodes = this.connections.filter(connection=>connection.start===dest.name || connection.end===dest.name).map(connection=>{
-                if(connection.start==dest.name) return connection.end
-                return connection.start
-            })
-            
-            connectedNodes.forEach(node=>{
-                // Now we should calculate the distance between "dest.name" and "node" 
-                // console.log(graph,nodeName);
-                const nodeCoords = this.destinations.find((dest)=>dest.name===node).coords
-                graph[dest.name][node] = distance(dest.coords.lat,nodeCoords.lat,dest.coords.lng,dest.coords.lng)
-            })
-        })
-        const rs = findShortestPath(graph,"Position de départ","Position d'arrivé")
-        this.colorizeCriticalPath(rs.path)
-        return rs
-    }
+    
 
     colorizeCriticalPath(path) {
         // Line name is "start + end" so we just have to loop over path
@@ -301,96 +239,12 @@ export default class StepsMonitor {
             this.sketch.tb.world.children.forEach((mesh) => {
                 if (mesh.name == path[i]+path[i+1]) {
                     mesh.material.color = new THREE.Color("rgb(192, 43, 43)")
-                }else if(mesh.type==="Line2") {
-                    mesh.material.color = new THREE.Color("#3C4755")
                 }
+                // else if(mesh.type==="Line2") {
+                //     mesh.material.color = new THREE.Color("#3C4755")
+                // }
             })
         }   
     }
 }
 
-let shortestDistanceNode = (distances, visited) => {
-    // create a default value for shortest
-      let shortest = null;
-      
-        // for each node in the distances object
-      for (let node in distances) {
-          // if no node has been assigned to shortest yet
-            // or if the current node's distance is smaller than the current shortest
-          let currentIsShortest =
-              shortest === null || distances[node] < distances[shortest];
-              
-            // and if the current node is in the unvisited set
-          if (currentIsShortest && !visited.includes(node)) {
-              // update shortest to be the current node
-              shortest = node;
-          }
-      }
-      return shortest;
-  };
-let findShortestPath = (graph, startNode, endNode) => {
- 
-    // track distances from the start node using a hash object
-      let distances = {};
-    distances[endNode] = "Infinity";
-    distances = Object.assign(distances, graph[startNode]);
-   // track paths using a hash object
-    let parents = { endNode: null };
-    for (let child in graph[startNode]) {
-     parents[child] = startNode;
-    }
-     
-    // collect visited nodes
-      let visited = [];
-   // find the nearest node
-      let node = shortestDistanceNode(distances, visited);
-    
-    // for that node:
-    while (node) {
-    // find its distance from the start node & its child nodes
-     let distance = distances[node];
-     let children = graph[node]; 
-         
-    // for each of those child nodes:
-         for (let child in children) {
-     
-     // make sure each child node is not the start node
-           if (String(child) === String(startNode)) {
-             continue;
-          } else {
-             // save the distance from the start node to the child node
-             let newdistance = distance + children[child];
-   // if there's no recorded distance from the start node to the child node in the distances object
-   // or if the recorded distance is shorter than the previously stored distance from the start node to the child node
-             if (!distances[child] || distances[child] > newdistance) {
-   // save the distance to the object
-        distances[child] = newdistance;
-   // record the path
-        parents[child] = node;
-       } 
-            }
-          }  
-         // move the current node to the visited set
-         visited.push(node);
-   // move to the nearest neighbor node
-         node = shortestDistanceNode(distances, visited);
-       }
-     
-    // using the stored paths from start node to end node
-    // record the shortest path
-    let shortestPath = [endNode];
-    let parent = parents[endNode];
-    while (parent) {
-     shortestPath.push(parent);
-     parent = parents[parent];
-    }
-    shortestPath.reverse();
-     
-    //this is the shortest path
-    let results = {
-     distance: distances[endNode],
-     path: shortestPath,
-    };
-    // return the shortest path & the end node's distance from the start node
-      return results;
-   };

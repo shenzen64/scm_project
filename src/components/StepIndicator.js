@@ -5,15 +5,35 @@ import Popup from './Popup'
 import Destinations from './Destinations'
 import Controls from './Controls'
 import Liasons from './Liasons'
+import GraphTheory from '../classes/GraphTheory'
 
 const StepIndicator = ({stepsMonitor,stepsDone}) => {
     
     // State
     const [opened,setOpened] = useState(false)
+    const [selectedAlgorithm,setSeelectedAlgorithm] = useState("")
     const [allDestinations,setAllDestinations] = useState([])
     const [allConnections,setAllConnections] = useState([]) // [{start:"",end:""}] Used to add arrow for each liaison
 
     const container = useRef()
+
+    const handleCriticalPath = ()=>{
+      const graph = new GraphTheory(stepsMonitor.destinations,stepsMonitor.connections)
+      switch (selectedAlgorithm) {
+        case "Djikstra":
+          const results = graph.Djikstra()
+          stepsMonitor.colorizeCriticalPath(results.path)
+        break;
+
+        case "Bellman-Ford":
+          graph.BellmanFord()
+        break;
+      
+        default:
+          break;
+      }
+    
+    }
     
 
     useEffect(() => {
@@ -91,6 +111,26 @@ const StepIndicator = ({stepsMonitor,stepsDone}) => {
                 <p>Ajouter des nouvelles liaisons</p>
             </div>
             
+            </div>
+
+            {/*  STEP 4 */}
+            <div className="container__wrapper">
+            <h2>Étape 4</h2>
+            <h3>Choisir un algorithme de transport :</h3>
+            
+            <div className="select">
+              <select  value={selectedAlgorithm} onChange={(e)=>setSeelectedAlgorithm(e.target.value)} name="choisir une algorithme" id="">
+                <option value="Djikstra">Djikstra</option>
+                <option value="Bellman-Ford">Bellman-Ford</option>
+             </select>
+            </div>
+             
+            
+             <div className="btn__container">
+                    <div onClick={handleCriticalPath} className="btn">
+                        OK
+                    </div>
+                </div>
             </div>
 
 

@@ -20,8 +20,6 @@ const Liasons = ({stepsMonitor,allLiaisons,setAllLiaisons}) => {
   }
 
   useEffect(() => {
-    console.log("??????");
-    
     setAllLiaisons(stepsMonitor.connections)
   }, []);
   

@@ -348,27 +348,6 @@ input {
   height: 60px !important;
 }
 
-.next__prev {
-  /* position: absolute;
-  bottom: 5px;
-  height: 25px; */
-  width: 95%;
-  padding: .3rem .2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-}
-#prev {
-  transform: rotateY(-180deg);
-}
-.steps__controle {
-  cursor: pointer;
-}
-.disabled {
-  pointer-events: none;
-  opacity: .4;
-}
 
 .liaisons__container {
   min-width: 500px;
